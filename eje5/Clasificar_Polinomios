@@ -1,0 +1,121 @@
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+
+using namespace std;
+
+void procesarTermino(vector<double>& polinomio, const string& termino) {
+    size_t xPos = termino.find('x');
+    double coef = 1.0;
+    int grado = 0;
+
+    if (xPos == string::npos) { // Si no hay 'x', es un término constante
+        coef = stod(termino);
+        grado = 0;
+    } else {
+
+        string coefStr = termino.substr(0, xPos);
+        if (coefStr.empty() || coefStr == "+") coef = 1.0;
+        else if (coefStr == "-") coef = -1.0;
+        else coef = stod(coefStr);
+
+
+        size_t gradoPos = termino.find('^', xPos);
+        if (gradoPos == string::npos) grado = 1;
+        else grado = stoi(termino.substr(gradoPos + 1));
+    }
+
+    if (grado >= polinomio.size()) {
+        polinomio.resize(grado + 1, 0.0);
+    }
+
+    polinomio[grado] += coef;
+}
+
+vector<double> parsearPolinomio(const string& str) {
+    vector<double> polinomio;
+    string termino;
+    stringstream ss(str);
+    char ch;
+
+    while (ss >> ch) {
+        if (ch == '+' || ch == '-') {
+            if (!termino.empty()) {
+                procesarTermino(polinomio, termino);
+                termino.clear();
+            }
+        }
+        termino += ch;
+    }
+
+    if (!termino.empty()) {
+        procesarTermino(polinomio, termino);
+    }
+
+    return polinomio;
+}
+
+vector<double> sumarPolinomios(const vector<double>& p1, const vector<double>& p2) {
+    vector<double> resultado(max(p1.size(), p2.size()), 0.0);
+
+    for (size_t i = 0; i < p1.size(); ++i) {
+        resultado[i] += p1[i];
+    }
+
+    for (size_t i = 0; i < p2.size(); ++i) {
+        resultado[i] += p2[i];
+    }
+
+    return resultado;
+}
+
+void mostrarPolinomio(const vector<double>& polinomio) {
+    bool primero = true;
+    for (int i = polinomio.size() - 1; i >= 0; --i) {
+        if (polinomio[i] != 0) {
+            if (!primero) {
+                cout << (polinomio[i] >= 0 ? " + " : " - ");
+            } else {
+                if (polinomio[i] < 0) cout << "-";
+                primero = false;
+            }
+
+            cout << abs(polinomio[i]);
+            if (i > 0) {
+                cout << "x";
+                if (i > 1) cout << "^" << i;
+            }
+        }
+    }
+    if (primero) cout << "0"; // Si todos los coeficientes son 0
+    cout << "\n";
+}
+
+int main(int argc, char** argv) {
+    if (argc != 3) {
+        cout << "Uso: " << argv[0] << " \"polinomio1\" \"polinomio2\"\n";
+        return 1;
+    }
+
+
+    vector<double> p1 = parsearPolinomio(argv[1]);
+    vector<double> p2 = parsearPolinomio(argv[2]);
+
+
+    vector<double> suma = sumarPolinomios(p1, p2);
+
+
+    cout << "Polinomio 1: ";
+    mostrarPolinomio(p1);
+
+    cout << "Polinomio 2: ";
+    mostrarPolinomio(p2);
+
+    cout << "Suma: ";
+    mostrarPolinomio(suma);
+
+    return 0;
+}
